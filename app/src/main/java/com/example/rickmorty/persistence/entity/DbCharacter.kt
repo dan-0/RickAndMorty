@@ -1,4 +1,4 @@
-package com.example.rickmorty.data.character
+package com.example.rickmorty.persistence.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -24,3 +24,4 @@ data class DbCharacter(
   @ColumnInfo("created")
   val created: String
 )
+

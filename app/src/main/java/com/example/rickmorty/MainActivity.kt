@@ -3,7 +3,6 @@ package com.example.rickmorty
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,11 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.rickmorty.ui.screens.CharactersScreen
-import com.example.rickmorty.ui.screens.CharactersViewModel
+import com.example.rickmorty.ui.screens.charachters.CharactersScreen
+import com.example.rickmorty.ui.screens.charachters.CharactersViewModel
+import com.example.rickmorty.ui.screens.characterinfo.CharacterInfo
+import com.example.rickmorty.ui.screens.characterinfo.CharacterInfoViewModel
 import com.example.rickmorty.ui.theme.RickMortyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -54,15 +56,20 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("characters") {
-              val viewModel: CharactersViewModel by viewModels()
+              val viewModel: CharactersViewModel = hiltViewModel()
               val state = viewModel.characters.collectAsState()
-              CharactersScreen(state = state)
+              CharactersScreen(state = state) {
+                navController.navigate("characterinfo/$it")
+              }
             }
+            composable(
+              "characterinfo/{${CharacterInfoViewModel.KEY_CHARACTER_ID}}",
+            ) {
 
-            composable("characterinfo/{id}") {
-
+              val viewModel: CharacterInfoViewModel = hiltViewModel()
+              val state = viewModel.character.collectAsState()
+              CharacterInfo(state = state)
             }
-
             composable("episodes") {
               // TODO
             }

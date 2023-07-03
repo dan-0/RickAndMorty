@@ -1,6 +1,6 @@
 package com.example.rickmorty.data.episode
 
-import com.example.rickmorty.data.character.DbCharacter
+import com.example.rickmorty.persistence.entity.DbCharacter
 
 data class Episode(
   val id: String,

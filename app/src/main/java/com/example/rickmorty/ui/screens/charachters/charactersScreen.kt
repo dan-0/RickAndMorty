@@ -1,7 +1,8 @@
-package com.example.rickmorty.ui.screens
+package com.example.rickmorty.ui.screens.charachters
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +40,8 @@ import com.example.rickmorty.data.character.BasicCharacter
 @Composable
 fun CharactersScreen(
   modifier: Modifier = Modifier,
-  state: State<UiState<List<BasicCharacter>>>
+  state: State<UiState<List<BasicCharacter>>>,
+  characterSelected: (characterId: String) -> Unit
 ) {
   AnimatedContent(state.value) { currentState ->
     when (currentState) {
@@ -63,7 +65,7 @@ fun CharactersScreen(
             modifier = modifier.fillMaxSize()
           ) {
             items(currentState.data) {
-              BasicCharacterView(basicCharacter = it)
+              BasicCharacterView(basicCharacter = it, characterSelected = characterSelected)
             }
           }
         }
@@ -73,11 +75,17 @@ fun CharactersScreen(
 }
 
 @Composable
-fun BasicCharacterView(basicCharacter: BasicCharacter) {
+fun BasicCharacterView(
+  basicCharacter: BasicCharacter,
+  characterSelected: (characterId: String) -> Unit
+) {
   Card(
     modifier = Modifier
       .fillMaxWidth()
       .padding(8.dp)
+      .clickable {
+        characterSelected(basicCharacter.id)
+      }
   ) {
     Column(
       verticalArrangement = Arrangement.spacedBy(4.dp),

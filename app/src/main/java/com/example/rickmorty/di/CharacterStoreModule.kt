@@ -4,9 +4,11 @@ import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.api.Optional
 import com.example.rickmorty.CharacterPagesQuery
 import com.example.rickmorty.CharactersByPageQuery
-import com.example.rickmorty.data.character.DbCharacter
+import com.example.rickmorty.FullCharacterQuery
+import com.example.rickmorty.persistence.dao.CharacterDao
+import com.example.rickmorty.persistence.entity.DbCharacter
+import com.example.rickmorty.store.CharacterInfoStore
 import com.example.rickmorty.store.CharacterStore
-import com.example.rickmorty.persistence.CharacterDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,6 +17,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import org.mobilenativefoundation.store.store5.Fetcher
 import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.StoreBuilder
@@ -52,6 +55,44 @@ class CharacterStoreModule {
     ).build()
 
     return CharacterStore(store)
+  }
+
+  @Provides
+  @Singleton
+  fun characterInfoStore(
+    apolloClient: ApolloClient,
+    characterDao: CharacterDao
+  ): CharacterInfoStore {
+    val store = StoreBuilder.from<String, Optional<DbCharacter>, Optional<DbCharacter>>(
+      fetcher = Fetcher.of {
+        apolloClient.query(FullCharacterQuery(it)).execute().let { response ->
+          val character = response.data?.character ?: return@of Optional.absent()
+
+          val dbCharacter = DbCharacter(
+            id = character.fullCharacterInfo.basicCharacterInfo.id ?: return@of Optional.absent(),
+            name = character.fullCharacterInfo.basicCharacterInfo.name ?: return@of Optional.absent(),
+            status = character.fullCharacterInfo.basicCharacterInfo.status,
+            species = character.fullCharacterInfo.basicCharacterInfo.species,
+            subspecies = character.fullCharacterInfo.type,
+            gender = character.fullCharacterInfo.gender,
+            image = character.fullCharacterInfo.basicCharacterInfo.image,
+            created = character.fullCharacterInfo.created ?: return@of Optional.absent()
+          )
+          Optional.present(dbCharacter)
+        }
+      },
+      sourceOfTruth = SourceOfTruth.of(
+        reader = { key ->
+          flowOf(Optional.presentIfNotNull(characterDao.getCharacterById(key)))
+        },
+        writer = { _, dbCharacter ->
+          dbCharacter.getOrNull()?.let {
+            characterDao.updateCharacter(it)
+          }
+        }
+      )
+    ).build()
+    return CharacterInfoStore(store)
   }
 
   private suspend fun getCharactersFromAllPages(apolloClient: ApolloClient): List<DbCharacter> {

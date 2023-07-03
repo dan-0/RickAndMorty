@@ -3,7 +3,7 @@ package com.example.rickmorty.di
 import android.content.Context
 import androidx.room.Room
 import com.example.rickmorty.persistence.AppDatabase
-import com.example.rickmorty.persistence.CharacterDao
+import com.example.rickmorty.persistence.dao.CharacterDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

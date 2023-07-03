@@ -1,16 +1,20 @@
-package com.example.rickmorty.persistence
+package com.example.rickmorty.persistence.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.rickmorty.data.character.DbCharacter
+import androidx.room.Update
+import com.example.rickmorty.persistence.entity.DbCharacter
 
 @Dao
 interface CharacterDao {
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun updateCharacters(characters: List<DbCharacter>)
+
+  @Update
+  fun updateCharacter(characters: DbCharacter)
 
   @Query("SELECT * FROM character")
   fun getAll(): List<DbCharacter>
