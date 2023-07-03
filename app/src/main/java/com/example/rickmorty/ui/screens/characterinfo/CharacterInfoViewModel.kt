@@ -3,7 +3,6 @@ package com.example.rickmorty.ui.screens.characterinfo
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.rickmorty.data.UiState
 import com.example.rickmorty.data.character.FullCharacter
 import com.example.rickmorty.persistence.entity.DbCharacter
 import com.example.rickmorty.store.CharacterInfoStore
@@ -26,8 +25,8 @@ class CharacterInfoViewModel @Inject constructor(
 
   private val key: String = savedStateHandle.get<String>(KEY_CHARACTER_ID)!!
 
-  private val _character = MutableStateFlow<UiState<FullCharacter?>>(UiState.Loading())
-  val character: StateFlow<UiState<FullCharacter?>> = _character
+  private val _character = MutableStateFlow<CharacterInfoState>(CharacterInfoState.Loading)
+  val character: StateFlow<CharacterInfoState> = _character
 
   init {
     viewModelScope.launch(Dispatchers.IO) {
@@ -46,7 +45,12 @@ class CharacterInfoViewModel @Inject constructor(
                   created = it.created
                 )
               }
-              UiState.Success(character)
+              if (character == null) {
+                Timber.e("No character received from data")
+                CharacterInfoState.Error
+              } else {
+                CharacterInfoState.Success(character)
+              }
             }
             is StoreReadResponse.Error.Exception -> {
               Timber.e(response.error)
@@ -54,32 +58,34 @@ class CharacterInfoViewModel @Inject constructor(
                 val fullCharacter = dbCharacterToFullCharacter(characterInfoStore.get(key).getOrNull())
 
                 if (fullCharacter != null) {
-                  UiState.Success(fullCharacter)
+                  CharacterInfoState.Success(fullCharacter)
                 } else {
-                  UiState.Error(errorMessage = "Character not in local cache")
+                  CharacterInfoState.Error
                 }
               } catch (e: Exception) {
-                UiState.Error(throwable = response.error)
+                Timber.e(e)
+                CharacterInfoState.Error
               }
             }
             is StoreReadResponse.Error.Message -> {
-              Timber.e(response.message)
               try {
                 val fullCharacter = dbCharacterToFullCharacter(characterInfoStore.get(key).getOrNull())
 
                 if (fullCharacter != null) {
-                  UiState.Success(fullCharacter)
+                  CharacterInfoState.Success(fullCharacter)
                 } else {
-                  UiState.Error(errorMessage = "Character not in local cache")
+                  Timber.e(response.message)
+                  CharacterInfoState.Error
                 }
               } catch (e: Exception) {
-                UiState.Error(errorMessage = response.message)
+                Timber.e(e)
+                CharacterInfoState.Error
               }
             }
-            is StoreReadResponse.Loading -> UiState.Loading()
+            is StoreReadResponse.Loading -> CharacterInfoState.Loading
             is StoreReadResponse.NoNewData -> {
               Timber.e("Successful query with no new data")
-              UiState.Success(null)
+              CharacterInfoState.Error
             }
           }
         }
@@ -103,3 +109,4 @@ class CharacterInfoViewModel @Inject constructor(
     const val KEY_CHARACTER_ID = "characterId"
   }
 }
+

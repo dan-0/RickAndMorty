@@ -10,18 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.rickmorty.data.UiState
-import com.example.rickmorty.data.character.FullCharacter
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CharacterInfo(
-  state: State<UiState<FullCharacter?>>
+  state: State<CharacterInfoState>
 ) {
   AnimatedContent(targetState = state.value) {
     when(it) {
-      is UiState.Error -> Text("Error")
-      is UiState.Loading -> {
+      is CharacterInfoState.Error -> Text("Error")
+      is CharacterInfoState.Loading -> {
         Box(
           modifier = Modifier.fillMaxSize(),
           contentAlignment = Alignment.Center
@@ -29,12 +27,8 @@ fun CharacterInfo(
           CircularProgressIndicator()
         }
       }
-      is UiState.Success -> {
-        if (it.data == null) {
-          Text("Could not find character")
-        } else {
-          Text(it.data.name)
-        }
+      is CharacterInfoState.Success -> {
+        Text(it.character.name)
       }
     }
   }

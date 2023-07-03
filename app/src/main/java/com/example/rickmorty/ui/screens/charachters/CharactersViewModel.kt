@@ -2,7 +2,6 @@ package com.example.rickmorty.ui.screens.charachters
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.rickmorty.data.UiState
 import com.example.rickmorty.data.character.BasicCharacter
 import com.example.rickmorty.persistence.entity.DbCharacter
 import com.example.rickmorty.store.CharacterStore
@@ -11,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import okhttp3.internal.toImmutableList
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 import org.mobilenativefoundation.store.store5.impl.extensions.get
@@ -23,11 +21,11 @@ class CharactersViewModel @Inject constructor(
   private val characterStore: CharacterStore
 ) : ViewModel() {
 
-  private val _characters = MutableStateFlow<UiState<List<BasicCharacter>>>(
-    UiState.Loading()
+  private val _characters = MutableStateFlow<CharactersState>(
+    CharactersState.Loading
   )
 
-  val characters: StateFlow<UiState<List<BasicCharacter>>> = _characters
+  val characters: StateFlow<CharactersState> = _characters
 
   init {
     viewModelScope.launch(Dispatchers.IO) {
@@ -38,32 +36,34 @@ class CharactersViewModel @Inject constructor(
         val uiState = when (storeResponse) {
           is StoreReadResponse.Data -> {
             val data = dbCharacterToBasicCharacter(storeResponse.value)
-            UiState.Success(data.toImmutableList())
+            CharactersState.Success(data)
           }
           is StoreReadResponse.Error.Exception -> {
             Timber.e(storeResponse.error, "Store exception")
             try {
-              UiState.Success(
+              CharactersState.Success(
                 dbCharacterToBasicCharacter(characterStore.get(KEY_ALL_CHARACTERS))
               )
             } catch (e: Exception) {
-              UiState.Error(throwable = e)
+              Timber.e(e)
+              CharactersState.Error
             }
           }
           is StoreReadResponse.Error.Message -> {
             Timber.e("Store error: ${storeResponse.message}")
             try {
-              UiState.Success(
+              CharactersState.Success(
                 dbCharacterToBasicCharacter(characterStore.get(KEY_ALL_CHARACTERS))
               )
             } catch (e: Exception) {
-              UiState.Error(throwable = e)
+              Timber.e(e)
+              CharactersState.Error
             }
           }
           is StoreReadResponse.Loading -> {
-            UiState.Loading()
+            CharactersState.Loading
           }
-          is StoreReadResponse.NoNewData -> UiState.Success(listOf())
+          is StoreReadResponse.NoNewData -> CharactersState.Success(listOf())
         }
         _characters.value = uiState
       }
@@ -87,5 +87,4 @@ class CharactersViewModel @Inject constructor(
   companion object {
     private const val KEY_ALL_CHARACTERS = "characterStore"
   }
-
 }

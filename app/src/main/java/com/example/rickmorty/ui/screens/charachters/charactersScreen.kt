@@ -33,22 +33,21 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.rickmorty.R
-import com.example.rickmorty.data.UiState
 import com.example.rickmorty.data.character.BasicCharacter
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CharactersScreen(
   modifier: Modifier = Modifier,
-  state: State<UiState<List<BasicCharacter>>>,
+  state: State<CharactersState>,
   characterSelected: (characterId: String) -> Unit
 ) {
   AnimatedContent(state.value) { currentState ->
     when (currentState) {
-      is UiState.Error -> {
+      is CharactersState.Error -> {
         Text("Error")
       }
-      is UiState.Loading -> {
+      is CharactersState.Loading -> {
         Box(
           modifier = Modifier.fillMaxSize(),
           contentAlignment = Alignment.Center
@@ -56,15 +55,15 @@ fun CharactersScreen(
           CircularProgressIndicator()
         }
       }
-      is UiState.Success -> {
-        if (currentState.data.isEmpty()) {
+      is CharactersState.Success -> {
+        if (currentState.characters.isEmpty()) {
           Text("No characters found")
 
         } else {
           LazyColumn(
             modifier = modifier.fillMaxSize()
           ) {
-            items(currentState.data) {
+            items(currentState.characters) {
               BasicCharacterView(basicCharacter = it, characterSelected = characterSelected)
             }
           }
