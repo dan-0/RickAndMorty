@@ -3,4 +3,6 @@
     <string name="label_name">Name</string>
     <string name="label_status">Status</string>
     <string name="label_species">Species</string>
+    <string name="label_subspecies">Sub-species</string>
+    <string name="label_gender">Gender</string>
 </resources>
