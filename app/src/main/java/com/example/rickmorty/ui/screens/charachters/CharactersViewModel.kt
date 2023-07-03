@@ -1,5 +1,6 @@
 package com.example.rickmorty.ui.screens.charachters
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rickmorty.data.character.BasicCharacter
@@ -7,7 +8,6 @@ import com.example.rickmorty.persistence.entity.DbCharacter
 import com.example.rickmorty.store.CharacterStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.mobilenativefoundation.store.store5.StoreReadRequest
@@ -18,14 +18,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CharactersViewModel @Inject constructor(
-  private val characterStore: CharacterStore
+  private val characterStore: CharacterStore,
+  private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-  private val _characters = MutableStateFlow<CharactersState>(
+
+  val characters: StateFlow<CharactersState> = savedStateHandle.getStateFlow(
+    KEY_STATE,
     CharactersState.Loading
   )
-
-  val characters: StateFlow<CharactersState> = _characters
 
   init {
     viewModelScope.launch(Dispatchers.IO) {
@@ -65,7 +66,7 @@ class CharactersViewModel @Inject constructor(
           }
           is StoreReadResponse.NoNewData -> CharactersState.Success(listOf())
         }
-        _characters.value = uiState
+        updateState(uiState)
       }
     }
   }
@@ -84,7 +85,12 @@ class CharactersViewModel @Inject constructor(
     }
   }
 
+  private fun updateState(state: CharactersState) {
+    savedStateHandle[KEY_STATE] = state
+  }
+
   companion object {
     private const val KEY_ALL_CHARACTERS = "characterStore"
+    private const val KEY_STATE = "KEY_CHARACTERS_STATE"
   }
 }

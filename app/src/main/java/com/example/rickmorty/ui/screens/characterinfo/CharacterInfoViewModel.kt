@@ -8,7 +8,6 @@ import com.example.rickmorty.persistence.entity.DbCharacter
 import com.example.rickmorty.store.CharacterInfoStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.mobilenativefoundation.store.store5.StoreReadRequest
@@ -20,19 +19,21 @@ import javax.inject.Inject
 @HiltViewModel
 class CharacterInfoViewModel @Inject constructor(
   private val characterInfoStore: CharacterInfoStore,
-  savedStateHandle: SavedStateHandle,
+  private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
   private val key: String = savedStateHandle.get<String>(KEY_CHARACTER_ID)!!
 
-  private val _character = MutableStateFlow<CharacterInfoState>(CharacterInfoState.Loading)
-  val character: StateFlow<CharacterInfoState> = _character
+  val character: StateFlow<CharacterInfoState> = savedStateHandle.getStateFlow(
+    key = KEY_STATE,
+    CharacterInfoState.Loading
+  )
 
   init {
     viewModelScope.launch(Dispatchers.IO) {
       characterInfoStore.stream(StoreReadRequest.cached(key, true))
         .collect { response ->
-          _character.value = when (response) {
+          val newState = when (response) {
             is StoreReadResponse.Data -> {
               val character = response.value.getOrNull()?.let {
                 FullCharacter(
@@ -88,6 +89,7 @@ class CharacterInfoViewModel @Inject constructor(
               CharacterInfoState.Error
             }
           }
+          updateState(newState)
         }
     }
   }
@@ -105,8 +107,13 @@ class CharacterInfoViewModel @Inject constructor(
     )
   }
 
+  private fun updateState(state: CharacterInfoState) {
+    savedStateHandle[KEY_STATE] = state
+  }
+
   companion object {
     const val KEY_CHARACTER_ID = "characterId"
+    private const val KEY_STATE = "KEY_CHARACTER_INFO_STATE"
   }
 }
 

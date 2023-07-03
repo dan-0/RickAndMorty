@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
     id "com.apollographql.apollo3"
+    id 'kotlin-parcelize'
 }
 
 android {
