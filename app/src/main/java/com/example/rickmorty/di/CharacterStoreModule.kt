@@ -95,6 +95,9 @@ class CharacterStoreModule {
     return CharacterInfoStore(store)
   }
 
+  /**
+   * Hacky implementation willfully ignoring pagination
+   */
   private suspend fun getCharactersFromAllPages(apolloClient: ApolloClient): List<DbCharacter> {
     val apolloResponse = apolloClient.query(CharacterPagesQuery()).execute()
 
